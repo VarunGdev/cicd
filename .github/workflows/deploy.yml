@@ -42,8 +42,7 @@ jobs:
 
       # 7. Push image to ECR
       - name: Push image
-        run: docker push \
-          084928383265.dkr.ecr.ap-south-1.amazonaws.com/my-app:${{ github.sha }}
+        run: docker push 084928383265.dkr.ecr.ap-south-1.amazonaws.com/my-app:${{ github.sha }}
 
       # 8. Update ECS Task Definition
       - name: Update ECS Task Definition
