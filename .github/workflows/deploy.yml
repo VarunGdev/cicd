@@ -38,8 +38,7 @@ jobs:
 
       # 6. Tag image for ECR
       - name: Tag image
-        run: docker tag my-app:${{ github.sha }} \
-          084928383265.dkr.ecr.ap-south-1.amazonaws.com/my-app:${{ github.sha }}
+        run: docker tag my-app:${{ github.sha }} 084928383265.dkr.ecr.ap-south-1.amazonaws.com/my-app:${{ github.sha }}
 
       # 7. Push image to ECR
       - name: Push image
