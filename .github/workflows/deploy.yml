@@ -23,15 +23,39 @@ jobs:
         run: |
           aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 084928383265.dkr.ecr.ap-south-1.amazonaws.com
 
+      # ✅ Build with unique tag
       - name: Build Docker image
-        run: docker build -t my-app .
+        run: docker build -t my-app:${{ github.sha }} .
 
+      # ✅ Tag for ECR
       - name: Tag image
-        run: docker tag my-app:latest 084928383265.dkr.ecr.ap-south-1.amazonaws.com/my-app:latest
+        run: docker tag my-app:${{ github.sha }} 084928383265.dkr.ecr.ap-south-1.amazonaws.com/my-app:${{ github.sha }}
 
+      # ✅ Push to ECR
       - name: Push image
-        run: docker push 084928383265.dkr.ecr.ap-south-1.amazonaws.com/my-app:latest
+        run: docker push 084928383265.dkr.ecr.ap-south-1.amazonaws.com/my-app:${{ github.sha }}
 
+      # ✅ Update task definition with new image
+      - name: Update ECS Task Definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition app \
+            --query taskDefinition > task-def.json
+
+          cat task-def.json | jq 'del(
+            .taskDefinitionArn,
+            .revision,
+            .status,
+            .requiresAttributes,
+            .compatibilities,
+            .registeredAt,
+            .registeredBy
+          ) | .containerDefinitions[0].image="084928383265.dkr.ecr.ap-south-1.amazonaws.com/my-app:${{ github.sha }}"' > new-task-def.json
+
+          aws ecs register-task-definition \
+            --cli-input-json file://new-task-def.json
+
+      # ✅ Deploy new task
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
@@ -39,5 +63,3 @@ jobs:
             --service app-service-lc2cue16 \
             --force-new-deployment \
             --region ap-south-1
-
-          
